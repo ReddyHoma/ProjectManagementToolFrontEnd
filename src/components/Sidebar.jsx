@@ -31,8 +31,8 @@ const Sidebar = () => {
   }, [fetchProjects]);
 
   return (
-    <div className="w-60 p-4 border-r "> {/* Ensures it starts below navbar */}
-      {/* Add Project Button */}
+    <div className="w-60 p-4 border-r "> 
+      
       <div className="px-4 mb-3 flex items-center justify-between">
         <span className="font-medium text-lg">Projects</span>
         <button
@@ -46,7 +46,6 @@ const Sidebar = () => {
         </button>
       </div>
 
-      {/* Project List */}
       <ul className="space-y-2">
         {projects.map((project) => (
           <Link key={project._id} to={`/projects/${project._id}`}>
@@ -62,7 +61,6 @@ const Sidebar = () => {
         ))}
       </ul>
 
-      {/* Modal Component */}
       <AddProjectModal isModalOpen={isModalOpen} closeModal={() => setModalState(false)} />
     </div>
   );
