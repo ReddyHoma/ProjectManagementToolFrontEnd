@@ -6,7 +6,7 @@ const roles = {
     Developer: 'bg-blue-500',
     Designer: 'bg-green-500',
     Manager: 'bg-red-500',
-    Tester: 'bg-yellow-500'
+    QA: 'bg-yellow-500'
 };
 
 const initialTeams = {
@@ -48,9 +48,8 @@ const Teams = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-4">Teams Management</h1>
+            <h1 className="text-2xl font-bold mb-4">Team Management</h1>
             
-            {/* Add Member Form */}
             <div className="flex gap-3 mb-6">
                 <input
                     type="text"
