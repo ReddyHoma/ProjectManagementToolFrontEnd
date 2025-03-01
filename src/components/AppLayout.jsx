@@ -8,15 +8,11 @@ import Projects from "../pages/projects.jsx";
 import Tasks from "../pages/tasks.jsx";
 import Teams from "../pages/teams.jsx";
 
-
 const AppLayout = () => {
 
     return (
-
-
         <div className="d-flex flex-column vh-100">
             <Navbar />
-
             <div className="container d-flex mx-auto w-100" style={{ height: 'calc(100vh - 56px)' }}>
                 <Sidebar />
                 <main className="flex-grow-1 p-3 overflow-auto">
@@ -28,11 +24,8 @@ const AppLayout = () => {
                         <Route path="/team" element={<Teams />} />
                     </Routes>
                 </main>
-
-
             </div>
         </div>
-
     )
 }
 

@@ -4,7 +4,6 @@ import { v4 as uuid } from "uuid";
 import AddTaskModal from "./AddTaskModal";
 import BtnPrimary from './BtnPrimary'
 import DropdownMenu from "./DropdownMenu";
-// import TaskModal from "./TaskModal";
 import { useParams, useNavigate } from "react-router";
 import ProjectDropdown from "./ProjectDropdown"
 import axios from "axios";
@@ -13,32 +12,6 @@ import TaskModal from "./TaskModal";
 
 
 function Task() {
-
-    // const itemsFromBackend = [
-    //     { _id: uuid(), content: "First task" },
-    //     { _id: uuid(), content: "Second task" },
-    //     { _id: uuid(), content: "Third task" },
-    //     { _id: uuid(), content: "Forth task" }
-    // ];
-
-    // const columnsFromBackend = {
-    //     [uuid()]: {
-    //         name: "Requested",
-    //         items: []
-    //     },
-    //     [uuid()]: {
-    //         name: "To do",
-    //         items: []
-    //     },
-    //     [uuid()]: {
-    //         name: "In Progress",
-    //         items: []
-    //     },
-    //     [uuid()]: {
-    //         name: "Done",
-    //         items: []
-    //     }
-    // };
 
     const onDragEnd = (result, columns, setColumns) => {
         if (!result.destination) return;
@@ -101,7 +74,6 @@ function Task() {
 
     const [isAddTaskModalOpen, setAddTaskModal] = useState(false);
 
-    // const [columns, setColumns] = useState(columnsFromBackend);
     const [columns, setColumns] = useState({});
     const [isRenderChange, setRenderChange] = useState(false);
     const [isTaskOpen, setTaskOpen] = useState(false);
@@ -112,7 +84,7 @@ function Task() {
 
     useEffect(() => {
         if (!isAddTaskModalOpen || isRenderChange) {
-            axios.get(`http://localhost:9000/project/${projectId}`)
+            axios.get(`http://localhost:9000/projects/${projectId}`)
                 .then((res) => {
                     setTitle(res.data[0].title)
                     setColumns({
@@ -142,27 +114,27 @@ function Task() {
                         }
                     })
                     setRenderChange(false)
-                }).catch((error) => {
+                }).catch(() => {
                     toast.error('Something went wrong')
                 })
         }
     }, [projectId, isAddTaskModalOpen, isRenderChange]);
 
     const updateTodo = (data) => {
-        axios.put(`http://localhost:9000/project/${projectId}/todo`, data)
+        axios.put(`http://localhost:9000/projects/${projectId}/todo`, data)
             .then((res) => {
-            }).catch((error) => {
+            }).catch(() => {
                 toast.error('Something went wrong')
             })
     }
 
     const handleDelete = (e, taskId) => {
         e.stopPropagation();
-        axios.delete(`http://localhost:9000/project/${projectId}/task/${taskId}`)
+        axios.delete(`http://localhost:9000/projects/${projectId}/task/${taskId}`)
             .then((res) => {
                 toast.success('Task is deleted')
                 setRenderChange(true)
-            }).catch((error) => {
+            }).catch(() => {
 
                 toast.error('Something went wrong')
             })
@@ -251,6 +223,7 @@ function Task() {
                     })}
                 </div >
             </DragDropContext >
+
             <AddTaskModal isAddTaskModalOpen={isAddTaskModalOpen} setAddTaskModal={setAddTaskModal} projectId={projectId} />
             <TaskModal isOpen={isTaskOpen} setIsOpen={setTaskOpen} id={taskId} />
         </div >
