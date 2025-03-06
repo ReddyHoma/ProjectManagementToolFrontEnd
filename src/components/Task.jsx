@@ -130,7 +130,7 @@ function Task() {
 
     const handleDelete = (e, taskId) => {
         e.stopPropagation();
-        axios.delete(`http://localhost:9000/projects/${projectId}/task/${taskId}`)
+        axios.delete(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`)
             .then((res) => {
                 toast.success('Task is deleted')
                 setRenderChange(true)

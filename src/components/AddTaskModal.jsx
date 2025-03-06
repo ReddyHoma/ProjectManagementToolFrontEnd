@@ -12,7 +12,7 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
 
     useEffect(() => {
         if (edit && isAddTaskModalOpen && projectId && taskId) {
-            axios.get(`http://localhost:9000/projects/${projectId}/task/${taskId}`)
+            axios.get(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`)
                 .then((res) => {
                     setTitle(res.data[0].task[0].title)
                     setDesc(res.data[0].task[0].description)
@@ -30,14 +30,14 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
         try {
             if (edit) {
                 // Update task
-                await axios.put(`http://localhost:9000/projects/${projectId}/task/${taskId}`, {
+                await axios.put(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`, {
                     title,
                     description: desc,
                 });
                 toast.success('Task updated successfully');
             } else {
                 // Create new task
-                await axios.post(`http://localhost:9000/projects/${projectId}/task`, {
+                await axios.post(`http://localhost:9000/projects/${projectId}/tasks`, {
                     title,
                     description: desc,
                 });

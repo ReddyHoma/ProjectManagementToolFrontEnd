@@ -21,6 +21,7 @@ const AppLayout = () => {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/tasks" element={<Tasks />} />
+                        <Route path="/projects/:id" element={<Tasks />} />
                         <Route path="/team" element={<Teams />} />
                     </Routes>
                 </main>

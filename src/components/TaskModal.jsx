@@ -14,7 +14,7 @@ const TaskModal = ({ isOpen, setIsOpen, id, refreshData }) => {
 
     useEffect(() => {
         if (isOpen && id.projectId && id.id) {
-            axios.get(`http://localhost:9000/projects/${id.projectId}/task/${id.id}`)
+            axios.get(`http://localhost:9000/projects/${id.projectId}/tasks/${id.taskId}`)
                 .then((res) => {
                     setTaskData(res.data.task);
                     // console.log(taskData);
@@ -31,7 +31,7 @@ const TaskModal = ({ isOpen, setIsOpen, id, refreshData }) => {
 
     const handleUpdate = async () => {
         try {
-            await axios.put(`http://localhost:9000/projects/${id.projectId}/task/${id.id}`, {
+            await axios.put(`http://localhost:9000/projects/${id.projectId}/tasks/${id.taskId}`, {
                 title: taskData.title,
                 description: taskData.description,
             });
