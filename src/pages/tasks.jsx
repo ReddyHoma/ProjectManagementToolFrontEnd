@@ -1,124 +1,156 @@
-import React, { useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { useParams, useNavigate } from "react-router";
-import axios from "axios";
-import toast from "react-hot-toast";
+import React, { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import AddTaskModal from "../components/AddTaskModal";
-import BtnPrimary from "../components/BtnPrimary";
-import TaskModal from "../components/TaskModal";
-import ProjectTabs from "../components/ProjectTabs";
+import axios from "axios";
 
-const COLUMN_KEYS = {
-    REQUESTED: "requested",
-    TODO: "todo",
-    IN_PROGRESS: "in_progress",
-    DONE: "done",
-};
+const Tasks = () => {
+  const [tasks, setTasks] = useState({
+    requested: [],
+    todo: [],
+    inProgress: [],
+    completed: []
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projects, setProjects] = useState([]);
 
-function Tasks() {
-    const [isAddTaskModalOpen, setAddTaskModal] = useState(false);
-    const [columns, setColumns] = useState({});
-    const [isRenderChange, setRenderChange] = useState(false);
-    const [isTaskOpen, setTaskOpen] = useState(false);
-    const [taskId, setTaskId] = useState(null);
-    const [title, setTitle] = useState("");
-    const { projectId } = useParams();
-    const navigate = useNavigate();
+  useEffect(() => {
+    axios.get("http://localhost:9000/projects")
+      .then((res) => {
+        console.log("Fetched projects:", res.data);
+        setProjects(res.data);
+      })
+      .catch((err) => console.error("Error fetching projects:", err));
+  }, []);
 
-    useEffect(() => {
-        if (!projectId) return;
-        if (!isAddTaskModalOpen || isRenderChange) {
-            axios.get(`http://localhost:9000/projects/${projectId}`)
-                .then((res) => {
-                    setTitle(res.data[0]?.title || "Untitled Project");
-                    const tasks = res.data[0]?.task || [];
-                    setColumns({
-                        [COLUMN_KEYS.REQUESTED]: { name: "Requested", items: tasks.filter(task => task.stage === "Requested") },
-                        [COLUMN_KEYS.TODO]: { name: "To Do", items: tasks.filter(task => task.stage === "To do") },
-                        [COLUMN_KEYS.IN_PROGRESS]: { name: "In Progress", items: tasks.filter(task => task.stage === "In Progress") },
-                        [COLUMN_KEYS.DONE]: { name: "Done", items: tasks.filter(task => task.stage === "Done") },
-                    });
-                    setRenderChange(false);
-                })
-                .catch(() => {
-                    toast.error("Something went wrong");
-                });
-        }
-    }, [projectId, isAddTaskModalOpen, isRenderChange]);
+  useEffect(() => {
+    if (!selectedProjectId) return;
 
-    const updateTodo = (data) => {
-        axios.put(`http://localhost:9000/projects/${projectId}/todo`, data)
-            .catch(() => toast.error("Something went wrong"));
+    axios.get(`http://localhost:9000/projects/${selectedProjectId}/tasks`)
+      .then((res) => {
+        console.log("Raw API response:", res.data);
+        setTasks({
+          requested: res.data.requested || [],
+          todo: res.data.todo || [],
+          inProgress: res.data.inProgress || [],
+          completed: res.data.completed || [],
+        });
+      })
+      .catch((err) => console.error("Error fetching tasks:", err));
+  }, [selectedProjectId]);
+
+  const addTask = (newTask) => {
+    axios.post(`http://localhost:9000/projects/${selectedProjectId}/tasks`, newTask)
+      .then(() => axios.get(`http://localhost:9000/projects/${selectedProjectId}/tasks`))
+      .then((res) => setTasks({
+        requested: res.data.requested || [],
+        todo: res.data.todo || [],
+        inProgress: res.data.inProgress || [],
+        completed: res.data.completed || [],
+      }))
+      .catch((err) => console.error("Error adding task:", err));
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const { source, destination, draggableId } = result;
+    const sourceCol = source.droppableId;
+    const destCol = destination.droppableId;
+
+    const stageMapping = {
+      requested: "Requested",
+      todo: "To Do",
+      inProgress: "In Progress",
+      completed: "Completed",
     };
 
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const { source, destination } = result;
-        const newColumns = { ...columns };
-        const sourceItems = [...newColumns[source.droppableId].items];
-        const [removed] = sourceItems.splice(source.index, 1);
-        newColumns[destination.droppableId].items.splice(destination.index, 0, removed);
-        setColumns(newColumns);
-        updateTodo(newColumns);
-    };
+    const newStage = stageMapping[destCol];
+    if (!newStage) return;
 
-    const handleDelete = (e, taskId) => {
-        e.stopPropagation();
-        axios.delete(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`)
-            .then(() => {
-                toast.success("Task deleted");
-                setRenderChange(true);
-            })
-            .catch(() => toast.error("Something went wrong"));
-    };
+    const taskList = [...tasks[sourceCol]];
+    const [movedTask] = taskList.splice(source.index, 1);
 
-    return (
-        <div className='px-12 py-6 w-full'>
-            <ProjectTabs projectId={projectId} navigate={navigate} />
-            <div className='flex items-center justify-between mb-6'>
-                <h1 className='text-xl text-gray-800'>{title}</h1>
-                <BtnPrimary onClick={() => setAddTaskModal(true)}>Add Task</BtnPrimary>
-            </div>
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div className='flex gap-5'>
-                    {Object.entries(columns).map(([columnId, column]) => (
-                        <div key={columnId} className='w-3/12 h-[580px]'>
-                            <h2 className='text-[#1e293b] font-medium text-sm uppercase'>{column.name} ({column.items.length})</h2>
-                            <Droppable droppableId={columnId}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={`min-h-[530px] pt-4 border-t-2 ${snapshot.isDraggingOver ? 'border-indigo-600' : 'border-indigo-400'}`}
-                                    >
-                                        {column.items.map((item, index) => (
-                                            <Draggable key={item._id} draggableId={item._id} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        className={`px-3.5 pt-3.5 pb-2.5 mb-2 border rounded-lg shadow-sm bg-white relative ${snapshot.isDragging && 'shadow-md'}`}
-                                                        onClick={() => { setTaskId(item._id); setTaskOpen(true); }}
-                                                    >
-                                                        <h3 className='text-[#1e293b] font-medium text-sm'>{item.title}</h3>
-                                                        <p className='text-xs text-slate-500'>{item.description.slice(0, 60)}{item.description.length > 60 && '...'}</p>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </div>
-                    ))}
-                </div>
-            </DragDropContext>
-            <AddTaskModal isAddTaskModalOpen={isAddTaskModalOpen} setAddTaskModal={setAddTaskModal} projectId={projectId} />
-            <TaskModal isOpen={isTaskOpen} setIsOpen={setTaskOpen} id={taskId} />
+    if (!movedTask) return;
+
+    const destList = [...tasks[destCol]];
+    destList.splice(destination.index, 0, { ...movedTask, stage: newStage });
+    setTasks({ ...tasks, [sourceCol]: taskList, [destCol]: destList });
+
+    const taskId = movedTask._id || movedTask.id;
+    if (!taskId) return;
+
+    axios.put(`http://localhost:9000/projects/${selectedProjectId}/tasks/${taskId}`, { stage: newStage })
+      .catch((err) => console.error("Error updating task stage:", err));
+  };
+
+  return (
+    <div className="p-6">
+      <div className="mb-4">
+        <h2 className="text-gray-700 font-bold mb-2">Select Project:</h2>
+        <div className="flex flex-wrap gap-2">
+          {projects.map((project) => (
+            <button
+              key={project._id}
+              onClick={() => setSelectedProjectId(project._id)}
+              className={`px-4 py-2 rounded ${selectedProjectId === project._id ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}`}
+            >
+              {project.title}
+            </button>
+          ))}
         </div>
-    );
-}
+      </div>
+
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="mb-4 px-4 py-2 bg-indigo-500 text-white rounded"
+        disabled={!selectedProjectId}
+      >
+        Add Task
+      </button>
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-4 gap-4">
+          {Object.entries(tasks).map(([colId, taskList]) => (
+            <Droppable key={colId} droppableId={colId}>
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-4 rounded-lg min-h-[300px]"
+                >
+                  <h2 className="text-lg font-bold capitalize">{colId.replace(/([A-Z])/g, " $1")}</h2>
+                  <p className="text-sm text-gray-500">Tasks: {taskList.length}</p>
+                  {taskList.map((task, index) => (
+                    <Draggable key={String(task._id)} draggableId={String(task._id)} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`mt-2 p-4 bg-white shadow rounded-md ${snapshot.isDragging ? "ring-2 ring-blue-400" : ""}`}
+                        >
+                          <h3 className="font-semibold">{task.title}</h3>
+                          <p className="text-sm text-gray-500">{task.description}</p>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+      </DragDropContext>
+
+      <AddTaskModal
+        isAddTaskModalOpen={isModalOpen}
+        setAddTaskModal={() => setIsModalOpen(false)}
+        projectId={selectedProjectId}
+        addTask={addTask}
+      />
+    </div>
+  );
+};
 
 export default Tasks;

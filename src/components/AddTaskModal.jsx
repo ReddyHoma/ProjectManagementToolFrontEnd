@@ -9,6 +9,7 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
 
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (edit && isAddTaskModalOpen && projectId && taskId) {
@@ -26,31 +27,36 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+        setLoading(true);
+
         try {
+            let response;
             if (edit) {
                 // Update task
-                await axios.put(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`, {
+                response = await axios.put(`http://localhost:9000/projects/${projectId}/tasks/${taskId}`, {
                     title,
                     description: desc,
                 });
                 toast.success('Task updated successfully');
             } else {
                 // Create new task
-                await axios.post(`http://localhost:9000/projects/${projectId}/tasks`, {
+                response = await axios.post(`http://localhost:9000/projects/${projectId}/tasks`, {
                     title,
                     description: desc,
                 });
                 toast.success('Task created successfully');
             }
 
-            refreshData(true); // Refresh task list
+            console.log("Task saved:", response.data);
+            document.dispatchEvent(new CustomEvent('taskUpdate'));
             setAddTaskModal(false); // Close modal
             setTitle('');
             setDesc('');
         } catch (error) {
-            const errorMsg = error.response?.data?.details?.[0]?.message || 'Something went wrong';
-            toast.error(errorMsg);
+            console.error("API Error:", error);
+            toast.error('Something went wrong');
+        } finally {
+            setLoading(false); // ✅ Remove loading state
         }
     };
 
@@ -101,7 +107,9 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
                                     </div>
                                     <div className='flex justify-end items-center space-x-2'>
                                         <BtnSecondary onClick={() => setAddTaskModal(false)}>Cancel</BtnSecondary>
-                                        <BtnPrimary>Save</BtnPrimary>
+                                        <BtnPrimary type="submit" disabled={loading}>
+                                            {loading ? "Saving..." : "Save"}
+                                        </BtnPrimary>
                                     </div>
                                 </form>
 

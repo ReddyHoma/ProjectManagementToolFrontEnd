@@ -24,7 +24,7 @@ const Navbar = () => {
           <button onClick={() => navigate("/tasks")} className="hover:text-indigo-600 transition text-shadow-sm">
             Tasks
           </button>
-          <button onClick={() => navigate("/team")} className="hover:text-indigo-600 transition text-shadow-sm">
+          <button onClick={() => navigate("/members")} className="hover:text-indigo-600 transition text-shadow-sm">
             Teams
           </button>
         </div>
