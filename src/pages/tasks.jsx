@@ -4,31 +4,29 @@ import AddTaskModal from "../components/AddTaskModal";
 import axios from "axios";
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState({
-    requested: [],
-    todo: [],
-    inProgress: [],
-    completed: []
-  });
+  const [tasks, setTasks] = useState({ requested: [], todo: [], inProgress: [], completed: [] });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     axios.get("http://localhost:9000/projects")
       .then((res) => {
-        console.log("Fetched projects:", res.data);
         setProjects(res.data);
+        if (res.data.length > 0) {
+          setSelectedProjectId(res.data[0]._id);
+        }
       })
-      .catch((err) => console.error("Error fetching projects:", err));
+      .catch((err) => setError("Error fetching projects."))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (!selectedProjectId) return;
-
     axios.get(`http://localhost:9000/projects/${selectedProjectId}/tasks`)
       .then((res) => {
-        console.log("Raw API response:", res.data);
         setTasks({
           requested: res.data.requested || [],
           todo: res.data.todo || [],
@@ -36,7 +34,7 @@ const Tasks = () => {
           completed: res.data.completed || [],
         });
       })
-      .catch((err) => console.error("Error fetching tasks:", err));
+      .catch((err) => setError("Error fetching tasks."));
   }, [selectedProjectId]);
 
   const addTask = (newTask) => {
@@ -48,40 +46,38 @@ const Tasks = () => {
         inProgress: res.data.inProgress || [],
         completed: res.data.completed || [],
       }))
-      .catch((err) => console.error("Error adding task:", err));
+      .catch(() => setError("Error adding task."));
   };
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
-    const { source, destination, draggableId } = result;
+
+    const { source, destination } = result;
     const sourceCol = source.droppableId;
     const destCol = destination.droppableId;
+    const movedTask = tasks[sourceCol][source.index];
+    if (!movedTask) return;
 
-    const stageMapping = {
+    const newStage = {
       requested: "Requested",
       todo: "To Do",
       inProgress: "In Progress",
       completed: "Completed",
-    };
+    }[destCol];
 
-    const newStage = stageMapping[destCol];
-    if (!newStage) return;
-
-    const taskList = [...tasks[sourceCol]];
-    const [movedTask] = taskList.splice(source.index, 1);
-
-    if (!movedTask) return;
-
-    const destList = [...tasks[destCol]];
-    destList.splice(destination.index, 0, { ...movedTask, stage: newStage });
-    setTasks({ ...tasks, [sourceCol]: taskList, [destCol]: destList });
-
-    const taskId = movedTask._id || movedTask.id;
-    if (!taskId) return;
-
-    axios.put(`http://localhost:9000/projects/${selectedProjectId}/tasks/${taskId}`, { stage: newStage })
-      .catch((err) => console.error("Error updating task stage:", err));
+    axios.put(`http://localhost:9000/projects/${selectedProjectId}/tasks/${movedTask._id}`, { stage: newStage })
+      .then(() => axios.get(`http://localhost:9000/projects/${selectedProjectId}/tasks`))
+      .then((res) => setTasks({
+        requested: res.data.requested || [],
+        todo: res.data.todo || [],
+        inProgress: res.data.inProgress || [],
+        completed: res.data.completed || [],
+      }))
+      .catch(() => setError("Error updating task stage."));
   };
+
+  if (loading) return <p>Loading projects...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="p-6">

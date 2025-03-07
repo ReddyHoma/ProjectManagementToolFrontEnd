@@ -7,59 +7,59 @@ import toast from 'react-hot-toast';
 
 const AddProjectModal = ({ isModalOpen, closeModal, edit = false, id = null }) => {
     const [title, setTitle] = useState('');
-    const [desc, setDesc] = useState('');
-    const [loading, setLoading] = useState(false); // ✅ Add loading state
+    const [description, setDescription] = useState('');
+    const [loading, setLoading] = useState(false); 
 
     useEffect(() => {
         if (edit && isModalOpen) {
             axios.get(`http://localhost:9000/projects/${id}`)
                 .then((res) => {
-                    setTitle(res.data[0]?.title || '');
-                    setDesc(res.data[0]?.description || '');
+                    if (res.data.length > 0) {
+                        setTitle(res.data[0].title);
+                        setDescription(res.data[0].description);
+                    }
                 })
                 .catch((error) => {
                     console.error("Fetch error:", error);
                     toast.error("Error fetching project details");
                 });
         }
-    }, [isModalOpen]);
+    }, [isModalOpen, id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); // ✅ Show loading state
+        if (loading) return;
+        setLoading(true); 
+        const payload = {
+            title,
+            description
+        };
+
+        console.log("Payload being sent :", payload);
 
         try {
             let response;
             if (!edit) {
-                response = await axios.post('http://localhost:9000/projects/', { 
-                    title, 
-                    description: desc 
-                });
+                response = await axios.post('http://localhost:9000/projects', payload);
                 toast.success('Project created successfully');
             } else {
-                response = await axios.put(`http://localhost:9000/projects/${id}`, { 
-                    title, 
-                    description: desc 
-                });
+                response = await axios.put(`http://localhost:9000/projects/${id}`, payload);
                 toast.success('Project updated successfully');
             }
 
             console.log("Project saved:", response.data);
 
-            // ✅ Dispatch event to notify project list
             document.dispatchEvent(new CustomEvent('projectUpdate'));
 
-            // ✅ Close modal after success
             closeModal();
 
-            // ✅ Reset fields
             setTitle('');
-            setDesc('');
+            setDescription('');
         } catch (error) {
             console.error("API Error:", error);
             toast.error('Something went wrong');
         } finally {
-            setLoading(false); // ✅ Remove loading state
+            setLoading(false); 
         }
     };
 
@@ -82,23 +82,23 @@ const AddProjectModal = ({ isModalOpen, closeModal, edit = false, id = null }) =
                                 <form onSubmit={handleSubmit} className='gap-4 px-8 py-4'>
                                     <div className='mb-3'>
                                         <label className='block text-gray-600'>Title</label>
-                                        <input 
-                                            value={title} 
-                                            onChange={(e) => setTitle(e.target.value)} 
-                                            type="text" 
-                                            className='border border-gray-300 rounded-md w-full text-sm py-2 px-2.5' 
-                                            placeholder='Project title' 
-                                            required 
+                                        <input
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            type="text"
+                                            className='border border-gray-300 rounded-md w-full text-sm py-2 px-2.5'
+                                            placeholder='Project title'
+                                            required
                                         />
                                     </div>
                                     <div className='mb-2'>
                                         <label className='block text-gray-600'>Description</label>
-                                        <textarea 
-                                            value={desc} 
-                                            onChange={(e) => setDesc(e.target.value)} 
-                                            className='border border-gray-300 rounded-md w-full text-sm py-2 px-2.5' 
-                                            rows="6" 
-                                            placeholder='Project description' 
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className='border border-gray-300 rounded-md w-full text-sm py-2 px-2.5'
+                                            rows="6"
+                                            placeholder='Project description'
                                             required
                                         ></textarea>
                                     </div>
