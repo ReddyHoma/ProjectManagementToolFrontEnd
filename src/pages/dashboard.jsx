@@ -1,8 +1,35 @@
 import React from "react";
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Dashboard = () => {
 
+  const [projectCount, setProjectCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [memberCount, setMemberCount] = useState(0);
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get("http://localhost:9000/projects")
+      .then((res) => {
+        console.log("Fetched projects:", res.data);
+        setProjects(res.data);
+        setProjectCount(res.data.length); // Store count of projects
+        res.data.forEach(project => console.log(`Project: ${project.title}, Tasks:`, project.task));
+        const totalTasks = res.data.reduce((count, project) => count + (project.task?.length || 0), 0);
+        setTaskCount(totalTasks);
+        const totalMembers = res.data.reduce((count, project) => count + (project.members?.length || 0), 0);
+        setMemberCount(totalMembers);
+        if (res.data.length > 0) setSelectedProjectId(res.data[0]._id);
+      })
+      .catch((err) => console.error("Error fetching projects:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="p-6">
@@ -22,15 +49,15 @@ const Dashboard = () => {
       <div className="grid grid-cols-3 gap-6 mb-6">
         <div className="bg-white shadow p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-700">Total Projects</h3>
-          <p className="text-3xl font-bold text-indigo-600">0</p>
+          <p className="text-3xl font-bold text-indigo-600">{projectCount}</p>
         </div>
         <div className="bg-white shadow p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-700">Active Tasks</h3>
-          <p className="text-3xl font-bold text-green-600">0</p>
+          <p className="text-3xl font-bold text-green-600">{taskCount}</p>
         </div>
         <div className="bg-white shadow p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-700">Team Members</h3>
-          <p className="text-3xl font-bold text-blue-600">0</p>
+          <p className="text-3xl font-bold text-blue-600">{memberCount}</p>
         </div>
       </div>
 
