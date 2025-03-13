@@ -77,24 +77,27 @@ const Dashboard = () => {
         <h2 className="text-xl font-semibold mb-4">Recent Activities</h2>
         <ul className="space-y-3 bg-white p-4 rounded-lg shadow">
           {recentActivities.length > 0 ? (
-            recentActivities.map((activity, index) => (
-              <li
-                key={index}
-                className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 
-                   odd:bg-gray-50 even:bg-white transition duration-300 hover:bg-gray-100"
-              >
-                <span className="text-blue-500">📌</span>
-                <p className="text-sm text-gray-700">{activity.message}</p>
-              </li>
-            ))
+            [...recentActivities] // Clone array to avoid mutating state
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort by timestamp (newest first)
+              .slice(0, 3) // Get the latest 3 activities
+              .map((activity, index) => (
+                <li
+                  key={index}
+                  className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 
+                            odd:bg-gray-50 even:bg-white transition duration-300 hover:bg-gray-100"
+                >
+                  <span className="text-blue-500">📌</span>
+                  <p className="text-sm text-gray-700">{activity.message}</p>
+                </li>
+              ))
           ) : (
             <p className="text-gray-400 text-center p-3 bg-gray-100 rounded-lg">
               No recent activities yet.
             </p>
           )}
         </ul>
-
       </div>
+
     </div>
   );
 };
