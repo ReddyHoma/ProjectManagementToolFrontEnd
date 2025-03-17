@@ -14,6 +14,7 @@ function App() {
       />
       <Routes>
         <Route path="/projects/:id" element={<Tasks />} />
+        <Route path="/projects/:id/tasks" element={<Tasks />} />
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </AppLayout>

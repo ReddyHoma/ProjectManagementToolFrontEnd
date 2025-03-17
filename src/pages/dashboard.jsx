@@ -1,11 +1,9 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-
+import { motion } from "framer-motion";
 
 const Dashboard = () => {
-
   const [projectCount, setProjectCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -19,10 +17,8 @@ const Dashboard = () => {
     axios
       .get("http://localhost:9000/projects")
       .then((res) => {
-        console.log("Fetched projects:", res.data);
         setProjects(res.data);
-        setProjectCount(res.data.length); // Store count of projects
-        res.data.forEach(project => console.log(`Project: ${project.title}, Tasks:`, project.task));
+        setProjectCount(res.data.length);
         const totalTasks = res.data.reduce((count, project) => count + (project.task?.length || 0), 0);
         setTaskCount(totalTasks);
         const totalMembers = res.data.reduce((count, project) => count + (project.members?.length || 0), 0);
@@ -44,61 +40,94 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="p-6">
-
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div>
-          <Link to="/projects" className="no-underline bg-indigo-600 text-white px-4 py-2 rounded-md mr-2">
+          <Link to="/projects" className="no-underline bg-indigo-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-indigo-700 transition-all">
             View Projects
           </Link>
-          <Link to="/tasks" className="no-underline bg-gray-600 text-white px-4 py-2 rounded-md">
+          <Link to="/tasks" className="no-underline bg-gray-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700 transition-all ml-2">
             View Tasks
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-6 mb-6">
-        <div className="bg-white shadow p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Total Projects</h3>
-          <p className="text-3xl font-bold text-indigo-600">{projectCount}</p>
-        </div>
-        <div className="bg-white shadow p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Active Tasks</h3>
-          <p className="text-3xl font-bold text-green-600">{taskCount}</p>
-        </div>
-        <div className="bg-white shadow p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Team Members</h3>
-          <p className="text-3xl font-bold text-blue-600">{memberCount}</p>
-        </div>
+        {[{
+          label: "Total Projects",
+          value: projectCount,
+          color: "bg-indigo-600",
+          textColor: "text-indigo-600"
+        }, {
+          label: "Active Tasks",
+          value: taskCount,
+          color: "bg-green-600",
+          textColor: "text-green-600"
+        }, {
+          label: "Team Members",
+          value: memberCount,
+          color: "bg-blue-600",
+          textColor: "text-blue-600"
+        }].map((stat, index) => (
+          <motion.div 
+            key={index} 
+            className="bg-white shadow rounded-lg overflow-hidden" 
+            whileHover={{ scale: 1.05 }}
+          >
+            <div className={`${stat.color} h-2 w-full`}></div>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-700">{stat.label}</h3>
+              <motion.p 
+                className={`text-3xl font-bold ${stat.textColor}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+              >
+                {stat.value}
+              </motion.p>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="bg-white shadow p-6 rounded-lg">
+      <motion.div 
+        className="bg-white shadow p-6 rounded-lg" 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-xl font-semibold mb-4">Recent Activities</h2>
         <ul className="space-y-3 bg-white p-4 rounded-lg shadow">
           {recentActivities.length > 0 ? (
-            [...recentActivities] // Clone array to avoid mutating state
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort by timestamp (newest first)
-              .slice(0, 3) // Get the latest 3 activities
+            [...recentActivities]
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+              .slice(0, 3)
               .map((activity, index) => (
-                <li
+                <motion.li 
                   key={index}
-                  className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 
-                            odd:bg-gray-50 even:bg-white transition duration-300 hover:bg-gray-100"
+                  className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 odd:bg-gray-50 even:bg-white transition duration-300 hover:bg-gray-100"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.2 }}
                 >
                   <span className="text-blue-500">📌</span>
                   <p className="text-sm text-gray-700">{activity.message}</p>
-                </li>
+                </motion.li>
               ))
           ) : (
-            <p className="text-gray-400 text-center p-3 bg-gray-100 rounded-lg">
+            <motion.p 
+              className="text-gray-400 text-center p-3 bg-gray-100 rounded-lg" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ duration: 0.3 }}
+            >
               No recent activities yet.
-            </p>
+            </motion.p>
           )}
         </ul>
-      </div>
-
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
