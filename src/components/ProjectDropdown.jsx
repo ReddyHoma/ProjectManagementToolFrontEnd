@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { Popover } from '@headlessui/react'
 import axios from "axios"
-import toast from 'react-hot-toast'
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import AddProjectModal from './AddProjectModal'
 
 const ProjectDropdown = ({ id, navigate }) => {

@@ -3,7 +3,10 @@ import { Dialog, Transition } from '@headlessui/react';
 import BtnPrimary from './BtnPrimary';
 import BtnSecondary from './BtnSecondary';
 import axios from "axios";
-import toast from 'react-hot-toast';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
 
 const AddProjectModal = ({ isModalOpen, closeModal, edit = false, id = null }) => {
     const [title, setTitle] = useState('');

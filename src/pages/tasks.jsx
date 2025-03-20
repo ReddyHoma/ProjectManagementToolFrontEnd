@@ -4,6 +4,9 @@ import { useParams } from "react-router-dom";
 import AddTaskModal from "../components/AddTaskModal";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Tasks = () => {
   const [tasks, setTasks] = useState({ requested: [], todo: [], inProgress: [], completed: [] });
@@ -92,7 +95,6 @@ const Tasks = () => {
       >
         Add Task
       </button>
-
       <DragDropContext onDragEnd={(result) => {
         if (!result.destination) return;
         const { source, destination } = result;

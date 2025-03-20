@@ -3,7 +3,11 @@ import { Dialog, Transition } from '@headlessui/react'
 import BtnPrimary from './BtnPrimary'
 import BtnSecondary from './BtnSecondary'
 import axios from 'axios'
-import toast from 'react-hot-toast'
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
+
 
 const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, taskId = null, edit = false, refreshData }) => {
 
@@ -28,6 +32,20 @@ const AddTaskModal = ({ isAddTaskModalOpen, setAddTaskModal, projectId = null, t
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        console.log("Submitting task...");
+
+        if (!title || title.length < 3) {
+            toast.error("Title must be at least 3 characters long");
+            setLoading(false);
+            return;
+        }
+
+        if (!desc.trim()) {
+            toast.error("Description cannot be empty");
+            setLoading(false);
+            return;
+        }
 
         try {
             let response;
